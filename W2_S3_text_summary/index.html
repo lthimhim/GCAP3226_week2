@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Policy Priority Map</title>
+    <style>
+      :root {
+        --bg-1: #07141f;
+        --bg-2: #0d1d2b;
+        --panel: rgba(16, 30, 42, 0.78);
+        --panel-alt: rgba(18, 38, 52, 0.9);
+        --line: rgba(255, 255, 255, 0.12);
+        --text: #edf6ff;
+        --muted: #a9bfd0;
+        --accent: #70d6ff;
+        --people: #ff7a7a;
+        --growth: #ffd166;
+        --housing: #7bd389;
+        --digital: #7c9bff;
+        --green: #52d6c7;
+        --shadow: rgba(0, 0, 0, 0.28);
+      }
+
+      * { box-sizing: border-box; }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(112,214,255,0.15), transparent 30%),
+          linear-gradient(135deg, var(--bg-1), var(--bg-2));
+        color: var(--text);
+      }
+
+      .page {
+        width: min(1200px, calc(100% - 32px));
+        margin: 32px auto 80px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 22px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,0.03);
+        backdrop-filter: blur(10px);
+        border-radius: 18px;
+        box-shadow: 0 18px 45px var(--shadow);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.72rem;
+        color: var(--muted);
+      }
+
+      .brand-mark {
+        width: 32px;
+        height: 32px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--accent), #7d7bff);
+        position: relative;
+        box-shadow: 0 0 18px rgba(112,214,255,0.6);
+      }
+
+      .brand-mark::before,
+      .brand-mark::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        inset: 8px;
+        border: 2px solid rgba(255,255,255,0.8);
+      }
+
+      .brand-mark::after {
+        inset: 13px;
+        border-width: 1px;
+      }
+
+      .badge {
+        border: 1px solid rgba(112,214,255,0.35);
+        color: var(--accent);
+        background: rgba(112,214,255,0.08);
+        padding: 8px 12px;
+        border-radius: 999px;
+        font-size: 0.74rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
+        gap: 24px;
+        margin-top: 28px;
+      }
+
+      .panel {
+        background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        box-shadow: 0 16px 36px rgba(0,0,0,0.2);
+      }
+
+      .intro {
+        padding: 28px;
+      }
+
+      .eyebrow {
+        margin: 0;
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--accent);
+      }
+
+      h1 {
+        font-size: clamp(2.3rem, 4vw, 4rem);
+        line-height: 0.95;
+        margin: 14px 0 18px;
+        max-width: 540px;
+      }
+
+      .lead {
+        color: var(--muted);
+        font-size: 1.04rem;
+        line-height: 1.7;
+        max-width: 600px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(120px, 1fr));
+        gap: 14px;
+        margin-top: 28px;
+      }
+
+      .stat {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 16px 18px;
+      }
+
+      .stat strong {
+        display: block;
+        font-size: 1.9rem;
+        margin-bottom: 8px;
+      }
+
+      .stat span {
+        color: var(--muted);
+        font-size: 0.78rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .visual {
+        padding: 20px;
+        min-height: 420px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .visual::before {
+        content: "";
+        position: absolute;
+        inset: 18% 16% auto auto;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(112,214,255,0.2), transparent 65%);
+        filter: blur(25px);
+      }
+
+      .map-wrap {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        min-height: 360px;
+      }
+
+      svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      .ring {
+        fill: none;
+        stroke: rgba(255,255,255,0.12);
+        stroke-width: 1.5;
+      }
+
+      .orbit {
+        fill: none;
+        stroke: rgba(112,214,255,0.2);
+        stroke-width: 1;
+        stroke-dasharray: 5 8;
+      }
+
+      .node {
+        fill: var(--accent);
+        stroke: rgba(255,255,255,0.8);
+        stroke-width: 2;
+        cursor: pointer;
+        transition: transform 0.2s ease, filter 0.2s ease;
+        filter: drop-shadow(0 0 16px rgba(112,214,255,0.5));
+      }
+
+      .node:hover,
+      .node.active {
+        filter: drop-shadow(0 0 28px rgba(112,214,255,0.8));
+      }
+
+      .node[data-theme="people"] { fill: var(--people); }
+      .node[data-theme="growth"] { fill: var(--growth); }
+      .node[data-theme="housing"] { fill: var(--housing); }
+      .node[data-theme="digital"] { fill: var(--digital); }
+      .node[data-theme="green"] { fill: var(--green); }
+
+      .node-label {
+        font-size: 12px;
+        fill: rgba(237,246,255,0.9);
+        text-anchor: middle;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+      }
+
+      .pulse {
+        animation: pulse 2.8s infinite ease-in-out;
+      }
+
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.9; }
+        50% { transform: scale(1.08); opacity: 1; }
+      }
+
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 26px 0 12px;
+      }
+
+      .theme-btn {
+        appearance: none;
+        border: 1px solid var(--line);
+        color: var(--text);
+        background: rgba(255,255,255,0.02);
+        border-radius: 999px;
+        padding: 10px 16px;
+        font: inherit;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+      }
+
+      .theme-btn:hover,
+      .theme-btn.active {
+        transform: translateY(-1px);
+        border-color: rgba(255,255,255,0.22);
+        background: rgba(255,255,255,0.06);
+      }
+
+      .theme-btn[data-theme="people"] { box-shadow: inset 0 0 0 1px rgba(255,122,122,0.25); }
+      .theme-btn[data-theme="growth"] { box-shadow: inset 0 0 0 1px rgba(255,209,102,0.25); }
+      .theme-btn[data-theme="housing"] { box-shadow: inset 0 0 0 1px rgba(123,211,137,0.25); }
+      .theme-btn[data-theme="digital"] { box-shadow: inset 0 0 0 1px rgba(124,155,255,0.25); }
+      .theme-btn[data-theme="green"] { box-shadow: inset 0 0 0 1px rgba(82,214,199,0.25); }
+
+      .focus {
+        display: grid;
+        grid-template-columns: 1.05fr 1.2fr;
+        gap: 24px;
+        margin-top: 12px;
+      }
+
+      .focus-card,
+      .priority-card {
+        padding: 22px;
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+
+      .card-title {
+        margin: 0;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 94px;
+        min-height: 34px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 700;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--line);
+      }
+
+      .theme-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 16px;
+        display: grid;
+        place-items: center;
+        font-size: 1.5rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--line);
+      }
+
+      .focus-summary {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 22px;
+      }
+
+      .ring-wrap {
+        width: 110px;
+        height: 110px;
+        position: relative;
+        display: grid;
+        place-items: center;
+      }
+
+      .ring-wrap svg {
+        transform: rotate(-90deg);
+      }
+
+      .ring-track {
+        fill: none;
+        stroke: rgba(255,255,255,0.1);
+        stroke-width: 10;
+      }
+
+      .ring-progress {
+        fill: none;
+        stroke: var(--accent);
+        stroke-width: 10;
+        stroke-linecap: round;
+        stroke-dasharray: 251.2;
+        stroke-dashoffset: 0;
+      }
+
+      .ring-value {
+        position: absolute;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 1.55rem;
+      }
+
+      .focus-meta h2 {
+        margin: 0 0 8px;
+        font-size: clamp(1.5rem, 2vw, 2.2rem);
+      }
+
+      .focus-meta p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .signal-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 12px;
+      }
+
+      .signal-list li {
+        display: grid;
+        grid-template-columns: 12px 1fr auto;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 12px 14px;
+      }
+
+      .signal-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 14px rgba(112,214,255,0.7);
+      }
+
+      .signal-list strong {
+        font-size: 0.9rem;
+      }
+
+      .signal-list span {
+        color: var(--muted);
+        font-size: 0.8rem;
+      }
+
+      .signal-score {
+        font-weight: 800;
+        color: var(--text);
+      }
+
+      .priority-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+        gap: 16px;
+      }
+
+      .priority-card {
+        min-height: 160px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .priority-card .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .mini-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        font-size: 1.1rem;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid var(--line);
+      }
+
+      .priority-card h3 {
+        font-size: 1.05rem;
+        margin: 0 0 10px;
+      }
+
+      .bars {
+        display: grid;
+        gap: 10px;
+      }
+
+      .bar {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.73rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      .track {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.06);
+        overflow: hidden;
+      }
+
+      .fill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), rgba(255,255,255,0.8));
+      }
+
+      .theme1 { --theme: var(--people); }
+      .theme2 { --theme: var(--growth); }
+      .theme3 { --theme: var(--housing); }
+      .theme4 { --theme: var(--digital); }
+      .theme5 { --theme: var(--green); }
+
+      .story {
+        margin-top: 28px;
+        padding: 24px;
+      }
+
+      .story-head {
+        margin: 0 0 18px;
+        font-size: 0.8rem;
+        letter-spacing: 0.12em;
+        color: var(--muted);
+        text-transform: uppercase;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(160px, 1fr));
+        gap: 18px;
+      }
+
+      .step {
+        position: relative;
+        padding: 18px 16px 14px;
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,0.02);
+      }
+
+      .step::before {
+        content: "";
+        position: absolute;
+        left: 18px;
+        top: -8px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 0 6px rgba(112,214,255,0.12);
+      }
+
+      .step strong {
+        display: block;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+      }
+
+      .step p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+        font-size: 0.92rem;
+      }
+
+      .footer {
+        margin-top: 26px;
+        padding: 18px 22px;
+        border-radius: 18px;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: var(--muted);
+        background: rgba(255,255,255,0.02);
+        text-align: center;
+      }
+
+      @media (max-width: 900px) {
+        .hero,
+        .focus {
+          grid-template-columns: 1fr;
+        }
+
+        .stats {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .stats,
+        .priority-grid,
+        .timeline {
+          grid-template-columns: 1fr;
+        }
+
+        .controls {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <span>Public Policy Lens</span>
+        </div>
+        <div class="badge">Reader-friendly summary</div>
+      </header>
+
+      <section class="hero">
+        <div class="panel intro">
+          <p class="eyebrow">Current focus</p>
+          <h1>Policy priorities at a glance</h1>
+          <p class="lead">
+            A visual snapshot of the main policy themes for faster reading, clearer comparisons,
+            and easier browsing across government priorities.
+          </p>
+
+          <div class="stats">
+            <div class="stat">
+              <strong>5</strong>
+              <span>Core themes</span>
+            </div>
+            <div class="stat">
+              <strong>4</strong>
+              <span>Priority stages</span>
+            </div>
+            <div class="stat">
+              <strong>1</strong>
+              <span>Simple map</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel visual" aria-label="Interactive policy map">
+          <div class="map-wrap">
+            <svg viewBox="0 0 420 360" role="img" aria-labelledby="visualTitle visualDesc">
+              <title id="visualTitle">Interactive policy map</title>
+              <desc id="visualDesc">A radial map showing five policy themes with clickable nodes.</desc>
+
+              <circle class="ring" cx="210" cy="180" r="120"></circle>
+              <circle class="orbit" cx="210" cy="180" r="90"></circle>
+              <circle class="orbit" cx="210" cy="180" r="60"></circle>
+
+              <circle class="node pulse" data-theme="people" cx="140" cy="120" r="20" tabindex="0" aria-label="People theme"></circle>
+              <circle class="node pulse" data-theme="growth" cx="270" cy="120" r="20" tabindex="0" aria-label="Growth theme"></circle>
+              <circle class="node pulse" data-theme="housing" cx="300" cy="210" r="20" tabindex="0" aria-label="Housing theme"></circle>
+              <circle class="node pulse" data-theme="digital" cx="210" cy="280" r="20" tabindex="0" aria-label="Digital theme"></circle>
+              <circle class="node pulse" data-theme="green" cx="120" cy="250" r="20" tabindex="0" aria-label="Green theme"></circle>
+
+              <text class="node-label" x="140" y="95">People</text>
+              <text class="node-label" x="270" y="95">Growth</text>
+              <text class="node-label" x="300" y="235">Housing</text>
+              <text class="node-label" x="210" y="305">Digital</text>
+              <text class="node-label" x="120" y="275">Green</text>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      <nav id="themeControls" class="controls" aria-label="Choose a policy theme">
+        <button class="theme-btn active" data-theme="people" type="button">People</button>
+        <button class="theme-btn" data-theme="growth" type="button">Growth</button>
+        <button class="theme-btn" data-theme="housing" type="button">Housing</button>
+        <button class="theme-btn" data-theme="digital" type="button">Digital</button>
+        <button class="theme-btn" data-theme="green" type="button">Green</button>
+      </nav>
+
+      <section class="focus">
+        <article class="panel focus-card">
+          <div class="card-header">
+            <p class="card-title">Selected theme</p>
+            <div class="chip" id="focusBadge">People</div>
+          </div>
+
+          <div class="focus-summary">
+            <div class="ring-wrap">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle class="ring-track" cx="60" cy="60" r="40"></circle>
+                <circle class="ring-progress" cx="60" cy="60" r="40" id="ringProgress"></circle>
+              </svg>
+              <div class="ring-value" id="ringValue">86</div>
+            </div>
+
+            <div class="focus-meta">
+              <h2 id="focusTitle">People</h2>
+              <p id="focusText">Wellbeing, inclusion, and support for everyday life.</p>
+            </div>
+          </div>
+
+          <ul class="signal-list" id="signalList"></ul>
+        </article>
+
+        <article class="panel priority-card">
+          <div class="card-header">
+            <p class="card-title">Priority mix</p>
+            <div class="theme-icon" id="themeIcon">👥</div>
+          </div>
+
+          <div class="priority-grid" id="priorityGrid"></div>
+        </article>
+      </section>
+
+      <section class="panel story">
+        <p class="story-head">How the policy story moves</p>
+        <div class="timeline" id="timeline"></div>
+      </section>
+
+      <div class="footer">
+        Summary view for easier reading only — not an official legal or policy document.
+      </div>
+    </div>
+
+    <script>
+      const themes = {
+        people: {
+          name: 'People',
+          icon: '👥',
+          badge: 'People',
+          score: 86,
+          text: 'Wellbeing, inclusion, and support for everyday life.',
+          signals: [
+            { label: 'Care', value: 92 },
+            { label: 'Access', value: 88 },
+            { label: 'Security', value: 81 }
+          ],
+          priorities: [
+            { label: 'Care', value: 92 },
+            { label: 'Health', value: 83 },
+            { label: 'Support', value: 76 }
+          ]
+        },
+        growth: {
+          name: 'Growth',
+          icon: '📈',
+          badge: 'Growth',
+          score: 78,
+          text: 'Economic momentum, competitiveness, and local opportunity.',
+          signals: [
+            { label: 'Jobs', value: 84 },
+            { label: 'Skills', value: 79 },
+            { label: 'Investment', value: 72 }
+          ],
+          priorities: [
+            { label: 'Jobs', value: 84 },
+            { label: 'Skills', value: 79 },
+            { label: 'Investment', value: 72 }
+          ]
+        },
+        housing: {
+          name: 'Housing',
+          icon: '🏠',
+          badge: 'Housing',
+          score: 80,
+          text: 'Stable homes, affordability, and better living conditions.',
+          signals: [
+            { label: 'Homes', value: 82 },
+            { label: 'Affordability', value: 80 },
+            { label: 'Liveability', value: 78 }
+          ],
+          priorities: [
+            { label: 'Homes', value: 82 },
+            { label: 'Affordability', value: 80 },
+            { label: 'Liveability', value: 78 }
+          ]
+        },
+        digital: {
+          name: 'Digital',
+          icon: '💻',
+          badge: 'Digital',
+          score: 74,
+          text: 'Digital services, innovation, and connected public systems.',
+          signals: [
+            { label: 'Services', value: 78 },
+            { label: 'Data', value: 72 },
+            { label: 'Innovation', value: 72 }
+          ],
+          priorities: [
+            { label: 'Services', value: 78 },
+            { label: 'Data', value: 72 },
+            { label: 'Innovation', value: 72 }
+          ]
+        },
+        green: {
+          name: 'Green',
+          icon: '🌿',
+          badge: 'Green',
+          score: 82,
+          text: 'Cleaner resilience, sustainability, and future-ready planning.',
+          signals: [
+            { label: 'Climate', value: 86 },
+            { label: 'Resilience', value: 82 },
+            { label: 'Environment', value: 79 }
+          ],
+          priorities: [
+            { label: 'Climate', value: 86 },
+            { label: 'Resilience', value: 82 },
+            { label: 'Environment', value: 79 }
+          ]
+        }
+      };
+
+      const ringProgress = document.getElementById('ringProgress');
+      const ringValue = document.getElementById('ringValue');
+      const focusBadge = document.getElementById('focusBadge');
+      const focusTitle = document.getElementById('focusTitle');
+      const focusText = document.getElementById('focusText');
+      const signalList = document.getElementById('signalList');
+      const priorityGrid = document.getElementById('priorityGrid');
+      const themeIcon = document.getElementById('themeIcon');
+      const timeline = document.getElementById('timeline');
+      const buttons = [...document.querySelectorAll('.theme-btn')];
+      const nodes = [...document.querySelectorAll('.node')];
+      const radius = 40;
+      const circumference = 2 * Math.PI * radius;
+
+      function setRing(value) {
+        ringProgress.style.strokeDasharray = String(circumference);
+        ringProgress.style.strokeDashoffset = String(circumference * (1 - value / 100));
+      }
+
+      function renderTheme(themeKey) {
+        const theme = themes[themeKey];
+        if (!theme) return;
+
+        focusBadge.textContent = theme.badge;
+        focusTitle.textContent = theme.name;
+        focusText.textContent = theme.text;
+        ringValue.textContent = theme.score;
+        themeIcon.textContent = theme.icon;
+        setRing(theme.score);
+
+        signalList.innerHTML = theme.signals
+          .map(item => `
+            <li>
+              <span class="signal-dot" aria-hidden="true"></span>
+              <div>
+                <strong>${item.label}</strong>
+                <span>Signal strength</span>
+              </div>
+              <span class="signal-score">${item.value}</span>
+            </li>
+          `)
+          .join('');
+
+        priorityGrid.innerHTML = theme.priorities
+          .map(item => `
+            <div class="priority-card panel">
+              <div class="top">
+                <h3>${item.label}</h3>
+                <span class="mini-icon" aria-hidden="true">${theme.icon}</span>
+              </div>
+              <div class="bars">
+                <div class="bar">
+                  <span>priority</span>
+                  <span>${item.value}</span>
+                </div>
+                <div class="track"><div class="fill" style="width:${item.value}%; background:linear-gradient(90deg, ${getThemeColor(themeKey)}, rgba(255,255,255,0.9));"></div></div>
+              </div>
+            </div>
+          `)
+          .join('');
+
+        timeline.innerHTML = [
+          { title: 'Frame 1', text: 'Start with the public challenge and the everyday need.' },
+          { title: 'Frame 2', text: 'Translate the issue into a practical policy direction.' },
+          { title: 'Frame 3', text: 'Measure what matters most to residents and growth.' },
+          { title: 'Frame 4', text: 'Turn themes into a balanced and resilient plan.' }
+        ].map(step => `
+          <div class="step">
+            <strong>${step.title}</strong>
+            <p>${step.text}</p>
+          </div>
+        `).join('');
+
+        buttons.forEach(btn => btn.classList.toggle('active', btn.dataset.theme === themeKey));
+        nodes.forEach(node => node.classList.toggle('active', node.dataset.theme === themeKey));
+      }
+
+      function getThemeColor(themeKey) {
+        const palette = {
+          people: '#ff7a7a',
+          growth: '#ffd166',
+          housing: '#7bd389',
+          digital: '#7c9bff',
+          green: '#52d6c7'
+        };
+        return palette[themeKey] || '#70d6ff';
+      }
+
+      buttons.forEach(button => {
+        button.addEventListener('click', () => renderTheme(button.dataset.theme));
+      });
+
+      nodes.forEach(node => {
+        node.addEventListener('click', () => renderTheme(node.dataset.theme));
+        node.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            renderTheme(node.dataset.theme);
+          }
+        });
+      });
+
+      renderTheme('people');
+    </script>
+  </body>
+</html>
